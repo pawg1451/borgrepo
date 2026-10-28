@@ -1,0 +1,14 @@
+{
+  "name": "borgbackup",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "@clack/prompts": "^1.8.1"
+  },
+  "devDependencies": {
+    "@types/fs-extra": "^11.0.4",
+    "@types/node": "^26.6.6",
+    "typescript": "^7.0.2",
+    "zx": "^8.8.5"
+  }
+}
