@@ -212,24 +212,49 @@ async function cmdRestore(archiveName) {
   }
 }
 async function getSelections() {
-  const selectedRepos = await p.multiselect({
-    message: "Select repositories:",
+  const scope = await p.select({
+    message: "Select repository scope:",
     options: [
-      ...config.repositories.map((repo) => ({
-        value: repo.location,
-        label: `${repo.name} - ${repo.location}`,
-      })),
       { value: "all", label: "All repositories" },
+      { value: "select", label: "Select specific repositories" },
     ],
   });
 
-  if (p.isCancel(selectedRepos)) {
+  if (p.isCancel(scope)) {
     p.cancel("Operation cancelled.");
     return null;
   }
 
+  let repos = [];
+  if (scope === "all") {
+    repos = config.repositories;
+  } else {
+    const selectedRepos = await p.multiselect({
+      message: "Select repositories:",
+      options: [
+        ...config.repositories.map((repo) => ({
+          value: repo.location,
+          label: `${repo.name} - ${repo.location}`,
+        })),
+      ],
+    });
+
+    if (p.isCancel(selectedRepos)) {
+      p.cancel("Operation cancelled.");
+      return null;
+    }
+
+    if (selectedRepos.length === 0) {
+      p.cancel("No repositories selected.");
+      return null;
+    }
+
+    repos = config.repositories.filter((repo) =>
+      selectedRepos.includes(repo.location),
+    );
+  }
   const selectedAction = await p.select({
-    massage: "Select action:",
+    message: "Select action:",
     options: [
       { value: "backup", label: "Backup" },
       { value: "dry-run", label: "Dry run" },
@@ -243,15 +268,6 @@ async function getSelections() {
   if (p.isCancel(selectedAction)) {
     p.cancel("Operation cancelled.");
     return null;
-  }
-
-  let repos;
-  if (selectedRepos.includes("all")) {
-    repos = config.repositories;
-  } else {
-    repos = config.repositories.filter((repo) =>
-      selectedRepos.includes(repo.location),
-    );
   }
 
   return { repos, selectedAction };
